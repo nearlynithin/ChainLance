@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // Use useNavigate instead of useHistory
+import { useNavigate } from 'react-router-dom';
+import Header from './components/header' // Use useNavigate instead of useHistory
 
 function Signup() {
   const [username, setUsername] = useState('');
@@ -20,6 +21,7 @@ function Signup() {
 
   return (
     <>
+    <Header/>
       <div className="bg-light-purple min-h-screen flex justify-center items-center bg-login">
       <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-6">
           <div className="text-center mb-8">

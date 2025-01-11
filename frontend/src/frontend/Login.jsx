@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import head from './components/header'
+import Header from './components/header'
 
 
 function Login() {
@@ -50,6 +50,7 @@ function Login() {
 
   return (
     <>
+    <Header/>
       <div className="bg-light-purple min-h-screen flex justify-center items-center bg-login">
         <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-6">
           <div className="text-center mb-8">
