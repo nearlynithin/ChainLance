@@ -36,7 +36,7 @@ with open('build/contracts/ChainLance.json', 'r') as file:
     contract_json = json.load(file)
     CONTRACT_ABI = contract_json['abi']
 
-CHAINLANCE_CONTRACT_ADDRESS = "0xFccF2789c98291c5eD50B476D6Ec2f2Ef319208d"
+CHAINLANCE_CONTRACT_ADDRESS = "0x3194cBDC3dbcd3E11a07892e7bA5c3394048Cc87"
 chainlance = Contract.from_abi("ChainLance", CHAINLANCE_CONTRACT_ADDRESS, CONTRACT_ABI)
 
 def init_db():

@@ -10,6 +10,7 @@ function BuyerDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [jobStatus, setJobStatus] = useState(null);
+  const [price, setPrice] = useState('');  // State to store price
 
   useEffect(() => {
     // Fetch the shops data
@@ -32,7 +33,10 @@ function BuyerDashboard() {
   }, []);
 
   const createJob = async (sellerAddress, shopId) => {
-    const price = 100; // Example price, replace with actual price logic
+    if (!price) {
+      setJobStatus({ message: 'Please enter a price.' });
+      return;
+    }
 
     try {
       const response = await fetch(`http://localhost:8000/api/createjob?seller_address=${sellerAddress}&buyer_address=${accountId}&price=${price}&shop_id=${shopId}`, {
@@ -69,9 +73,19 @@ function BuyerDashboard() {
       <h2>Shops</h2>
       <ul>
         {shops.map((shop) => (
-          <li key={shop.shop_id}><p>{shop.shop_id}</p>
+          <li key={shop.shop_id}>
+            <p>{shop.shop_id}</p>
             <h3>{shop.shop_name}</h3>
             <p>Seller ID: {shop.seller_id}</p>
+            <label>
+              Enter Price:
+              <input 
+                type="number" 
+                value={price} 
+                onChange={(e) => setPrice(e.target.value)} 
+                placeholder="Enter price"
+              />
+            </label>
             <button onClick={() => createJob(shop.seller_id, shop.shop_id)}>
               Create Job
             </button>
