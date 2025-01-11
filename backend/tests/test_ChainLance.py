@@ -42,6 +42,9 @@ def test_compelete_job(chainlance):
     chainlance.createJob(seller,price,{"from": accounts[0]})
     chainlance.fundJob(1,{"from":accounts[0], "value":price})
     
+    # seller tries to mark the job as complete
+    with reverts("Only the buyer can perform this action"):
+        chainlance.completeJob(1,{"from": seller})
     
     # buyer marks the job as complete
     seller_balance_before = seller.balance()
@@ -96,3 +99,25 @@ def test_buyer_cancelling_job(chainlance):
     with reverts("Job does not exist"):
         chainlance.completeJob(1,{"from": accounts[0]})
     
+
+# Fund life cycle
+def test_fund_flow(chainlance):
+    buyer = accounts[0]
+    seller = accounts[1]
+    price = 1000
+    
+    seller_balance_before = seller.balance()
+
+    # Create a job
+    chainlance.createJob(seller, price, {"from": buyer})
+    assert chainlance.balance() == 0
+
+    # Fund the job
+    chainlance.fundJob(1, {"from": buyer, "value": price})
+    # Testing the balance held in escrow
+    assert chainlance.balance() == price
+
+    # Complete the job
+    chainlance.completeJob(1, {"from": buyer})
+    assert chainlance.balance() == 0
+    assert seller.balance() == seller_balance_before + price
