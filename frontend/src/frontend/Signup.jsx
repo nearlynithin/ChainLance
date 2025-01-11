@@ -19,25 +19,49 @@ function Signup() {
   };
 
   return (
+    <>
+      <div className="bg-light-purple min-h-screen flex justify-center items-center bg-login">
+      <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-6">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-purple-600">Hello There!</h1>
+            <p className="text-gray-500 mt-2">Please signup to continue</p>
+          </div>
     <form onSubmit={handleSignup}>
+    <div className="mb-4">
+    <p className="font-Mont font-medium m-1">
+              Username:
+              </p>
       <input
         type="text"
         placeholder="Username"
+        className="w-full p-3 rounded-md border border-gray-300 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
       />
+      </div>
+      <div className="mb-4">
+      <p className="font-Mont font-medium m-1">
+              Password:
+              </p>
       <input
         type="password"
         placeholder="Password"
+        className="w-full p-3 rounded-md border border-gray-300 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
+      </div>
       <select value={role} onChange={(e) => setRole(e.target.value)}>
         <option value="buyer">Buyer</option>
         <option value="seller">Seller</option>
       </select>
-      <button type="submit">Signup</button>
+      <div className="mb-4"></div>
+      <button type="submit"
+       className="w-full p-3 bg-purple-600 text-white rounded-md shadow-md hover:bg-purple-700 transition">Signup</button>
     </form>
+    </div>
+    </div>
+    </>
   );
 }
 
