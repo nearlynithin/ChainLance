@@ -61,3 +61,38 @@ def test_compelete_job(chainlance):
     
     assert tx.events["JobCompleted"]["jobId"] == 1
     assert tx.events["JobCompleted"]["seller"] == seller
+    
+    
+def test_buyer_cancelling_job(chainlance):
+    seller = accounts[1]
+    price = 1000
+    
+    chainlance.createJob(seller,price,{"from": accounts[0]})
+    chainlance.fundJob(1,{"from":accounts[0], "value":price})
+    
+    job = chainlance.jobs(1)
+    
+    buyer_balance_before = accounts[0].balance()
+    seller_balance_before = seller.balance()
+    
+    # job not compelete
+    assert job[5] == False
+    
+    # Cancel the job
+    chainlance.cancelJob(1,{"from": accounts[0]})
+    # Assert: The buyer's funds are refunded, and the seller's balance is unchanged
+    assert accounts[0].balance() == buyer_balance_before + price
+    assert seller.balance() == seller_balance_before
+    
+    # job is deleted, so checking for default values
+    job = chainlance.jobs(1)
+    job[0] == 1
+    job[1] == "0x0000000000000000000000000000000000000000"
+    job[2] == "0x0000000000000000000000000000000000000000"
+    job[3] == 0
+    job[4] == False
+    job[5] == False
+        
+    with reverts("Job does not exist"):
+        chainlance.completeJob(1,{"from": accounts[0]})
+    
