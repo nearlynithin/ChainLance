@@ -2,7 +2,10 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import authRoutes from './routes/auth.js';  // This will now work after you set the default export in auth.js
+import dotenv from 'dotenv';
 
+// Load environment variables from .env file
+dotenv.config();
 
 const app = express();
 
@@ -10,7 +13,8 @@ app.use(express.json());
 app.use(cors());
 app.use('/api/auth', authRoutes);
 
-mongoose.connect('mongodb+srv://Santhsim:Santhsim123@cluster0.hazln.mongodb.net/', { useNewUrlParser: true, useUnifiedTopology: true })
+// Use the MongoDB connection string from the environment variable
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.log(err));
 
