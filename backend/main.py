@@ -275,5 +275,30 @@ async def complete_order(order_id: int, buyer_address: str):
         print(f"Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# to see all available shops
+@app.get("/api/shops")
+async def get_all_shops():
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # Fetch all shops with their details
+        cursor.execute("""
+            SELECT shop_id, shop_name, seller_id 
+            FROM shops
+        """)
+        shops = cursor.fetchall()
+        conn.close()
+        
+        # Convert rows to a list of dictionaries
+        return {
+            "shops": [dict(shop) for shop in shops]
+        }
+    except Exception as e:
+        print(f"Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
