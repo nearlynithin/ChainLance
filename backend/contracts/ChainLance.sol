@@ -12,9 +12,9 @@ contract ChainLance {
     }
 
     uint256 public jobCounter;
-
-    //a map of all the current active jobs
     mapping(uint256 => Job) public jobs;
+    // New mapping to track seller's jobs
+    mapping(address => uint256[]) public sellerJobs;
 
     event JobCreated(
         uint256 jobId,
@@ -22,7 +22,6 @@ contract ChainLance {
         address indexed seller,
         uint256 price
     );
-
     event JobFunded(uint256 jobId, uint256 price);
     event JobCompleted(uint256 jobId, address indexed seller);
     event JobCancelled(uint256 jobId, address indexed buyer);
@@ -48,12 +47,12 @@ contract ChainLance {
         _;
     }
 
-    // Create a new job
     function createJob(address payable seller, uint256 price) external {
         require(price > 0, "Price must be greater than zero");
         require(seller != address(0), "Invalid seller address");
 
         jobCounter++;
+
         jobs[jobCounter] = Job({
             id: jobCounter,
             buyer: msg.sender,
@@ -63,11 +62,19 @@ contract ChainLance {
             isCompleted: false
         });
 
+        // Add job to seller's job list
+        sellerJobs[seller].push(jobCounter);
+
         emit JobCreated(jobCounter, msg.sender, seller, price);
     }
 
-    // Buyer calls this function, by giving the jobId
-    // funds are held inside the contract ie will be released/refunded based on completion/cancellation
+    // New function to get all jobs for a seller
+    function getSellerJobs(
+        address seller
+    ) external view returns (uint256[] memory) {
+        return sellerJobs[seller];
+    }
+
     function fundJob(
         uint256 jobId
     ) external payable jobExists(jobId) onlyBuyer(jobId) {
@@ -76,11 +83,9 @@ contract ChainLance {
         require(msg.value == job.price, "Incorrect amount sent");
 
         job.isFunded = true;
-
         emit JobFunded(jobId, msg.value);
     }
 
-    // Complete a job and release payment to the seller
     function completeJob(
         uint256 jobId
     ) external jobExists(jobId) onlyBuyer(jobId) {
@@ -90,11 +95,9 @@ contract ChainLance {
 
         job.isCompleted = true;
         job.seller.transfer(job.price);
-
         emit JobCompleted(jobId, job.seller);
     }
 
-    // Cancel a job and refund the buyer
     function cancelJob(
         uint256 jobId
     ) external jobExists(jobId) onlyBuyer(jobId) {
@@ -106,7 +109,6 @@ contract ChainLance {
         }
 
         delete jobs[jobId];
-
         emit JobCancelled(jobId, msg.sender);
     }
 }
