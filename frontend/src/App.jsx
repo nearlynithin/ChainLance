@@ -4,6 +4,7 @@ import Login from './frontend/Login.jsx';
 import Signup from './frontend/Signup.jsx';
 import BuyerDashboard from './frontend/BuyerDashboard.jsx';
 import SellerDashboard from './frontend/SellerDashboard.jsx';
+import Main from './main.jsx';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -19,6 +20,7 @@ function App() {
   return (
     <Router>
       <Routes>
+      <Route path="/" element={<Main />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route
