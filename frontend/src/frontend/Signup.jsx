@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'; // Use useNavigate instead of us
 function Signup() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('buyer');
+  const [role, setRole] = useState('');
   const navigate = useNavigate(); // Replace history with navigate
 
   const handleSignup = async (e) => {
@@ -51,13 +51,20 @@ function Signup() {
         onChange={(e) => setPassword(e.target.value)}
       />
       </div>
-      <select value={role} onChange={(e) => setRole(e.target.value)}>
-        <option value="buyer">Buyer</option>
-        <option value="seller">Seller</option>
+      <div className="mb-4">
+      <p className="font-Mont font-medium m-1">
+              Account Type:
+              </p>
+      <select placeholder="Select Type" className="w-full p-3 rounded-md border border-gray-300 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500"value={role} onChange={(e) => setRole(e.target.value)}>
+      <option value="" disabled hidden>Select Type</option>
+        <option className="m-2 hover:bg-purple-600 font-Mont bg-white "  value="buyer">Buyer</option>
+        <option className="m-2 hover:bg-purple-600 font-Mont bg-white" value="seller">Seller</option>
       </select>
-      <div className="mb-4"></div>
+      </div>
+      <div>
       <button type="submit"
        className="w-full p-3 bg-purple-600 text-white rounded-md shadow-md hover:bg-purple-700 transition">Signup</button>
+      </div> 
     </form>
     </div>
     </div>

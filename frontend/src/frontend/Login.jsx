@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import head from './components/header'
 
 
 function Login() {
@@ -96,7 +97,7 @@ function Login() {
               </div>
             </div>
             <div className="text-center mb-4">
-              {accountId && <p className="text-gray-700">Account ID: {accountId}</p>}
+              {accountId && <p className="text-blue-700 font-Mont font-medium">Account ID: {accountId}</p>}
             </div>
             <div className="mb-4">
               <button
