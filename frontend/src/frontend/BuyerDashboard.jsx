@@ -1,22 +1,12 @@
-<<<<<<< HEAD
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-=======
-import React, { useEffect, useState } from "react";
-import { useParams, useLocation } from "react-router-dom";
-import "tailwindcss/tailwind.css";
->>>>>>> 6d24353 (stuff)
 
 const BuyerDashboard = () => {
   const { username } = useParams();
   const location = useLocation();
-<<<<<<< HEAD
   const accountId = location.state?.accountId || 'Unknown Account';
   const canvasRef = useRef(null);
-=======
-  const accountId = location.state?.accountId || "Unknown Account";
->>>>>>> 6d24353 (stuff)
 
   const [shops, setShops] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -24,17 +14,13 @@ const BuyerDashboard = () => {
   const [error, setError] = useState(null);
   const [jobStatus, setJobStatus] = useState(null);
   const [fundStatus, setFundStatus] = useState(null);
-<<<<<<< HEAD
   const [price, setPrice] = useState('');
-=======
-  const [price, setPrice] = useState("");
->>>>>>> 6d24353 (stuff)
 
   useEffect(() => {
     const fetchShops = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/shops");
-        if (!response.ok) throw new Error("Failed to fetch shops");
+        const response = await fetch('http://localhost:8000/api/shops');
+        if (!response.ok) throw new Error('Failed to fetch shops');
         const data = await response.json();
         setShops(data.shops);
       } catch (err) {
@@ -44,19 +30,10 @@ const BuyerDashboard = () => {
       }
     };
 
-<<<<<<< HEAD
-=======
-    fetchShops();
-  }, []);
-
-  useEffect(() => {
->>>>>>> 6d24353 (stuff)
     const fetchOrders = async () => {
       try {
-        const response = await fetch(
-          `http://localhost:8000/api/buyer/${accountId}/orders`
-        );
-        if (!response.ok) throw new Error("Failed to fetch orders");
+        const response = await fetch(`http://localhost:8000/api/buyer/${accountId}/orders`);
+        if (!response.ok) throw new Error('Failed to fetch orders');
         const data = await response.json();
         setOrders(data.orders);
       } catch (err) {
@@ -68,7 +45,6 @@ const BuyerDashboard = () => {
     fetchOrders();
   }, [accountId]);
 
-<<<<<<< HEAD
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -110,12 +86,6 @@ const BuyerDashboard = () => {
         ctx.closePath();
         ctx.fill();
       }
-=======
-  const createJob = async (sellerAddress, shopId) => {
-    if (!price) {
-      setJobStatus({ message: "Please enter a price." });
-      return;
->>>>>>> 6d24353 (stuff)
     }
 
     for (let i = 0; i < particleCount; i++) {
@@ -173,8 +143,8 @@ const BuyerDashboard = () => {
       const response = await fetch(
         `http://localhost:8000/api/createjob?seller_address=${sellerAddress}&buyer_address=${accountId}&price=${price}&shop_id=${shopId}`,
         {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
         }
       );
   
@@ -194,16 +164,17 @@ const BuyerDashboard = () => {
       setJobStatus({ message: `Error: ${error.message}`, type: 'error' });
     }
   };
+  
   const fundJob = async (order_id) => {
     try {
       const response = await fetch(
         `http://localhost:8000/api/fundjob/${order_id}?buyer_address=${accountId}`,
         {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
         }
       );
-
+  
       const data = await response.json();
   
       if (response.ok) {
@@ -365,59 +336,11 @@ const BuyerDashboard = () => {
           </motion.div>
         </div>
 
-      <div className="mt-8">
-        <h2 className="text-2xl font-bold mb-4">Your Orders</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {orders.length > 0 ? (
-            orders.map((order) => (
-              <div
-                key={order.order_id}
-                className="bg-white rounded-lg shadow-lg p-6 hover:shadow-2xl transition-shadow"
-              >
-                <h3 className="text-xl font-semibold">
-                  Order ID: {order.order_id}
-                </h3>
-                <p className="text-gray-600">Shop: {order.shop_name}</p>
-                <p className="text-gray-600">Price: {order.price}</p>
-                <p className="text-gray-600">Status: {order.status}</p>
-                {order.status === "completed" ? (
-                  <button
-                    disabled
-                    className="mt-4 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg"
-                  >
-                    Completed
-                  </button>
-                ) : order.status === "funded" ? (
-                  <button
-                    onClick={() => completeOrder(order.order_id)}
-                    className="mt-4 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
-                  >
-                    Complete
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => fundJob(order.order_id)}
-                    className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-                  >
-                    Fund Job
-                  </button>
-                )}
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-600">No orders found.</p>
-          )}
-        </div>
+        <AnimatePresence>
+          {jobStatus && <StatusMessage key="job" status={jobStatus} />}
+          {fundStatus && <StatusMessage key="fund" status={fundStatus} />}
+        </AnimatePresence>
       </div>
-
-      {fundStatus && (
-        <div className="mt-8 bg-blue-100 text-blue-800 p-4 rounded-lg">
-          <p>{fundStatus.message}</p>
-          {fundStatus.transactionHash && (
-            <p>Transaction Hash: {fundStatus.transactionHash}</p>
-          )}
-        </div>
-      )}
     </div>
   );
 };
@@ -482,4 +405,3 @@ const ErrorIcon = ({ className }) => (
 );
 
 export default BuyerDashboard;
-
