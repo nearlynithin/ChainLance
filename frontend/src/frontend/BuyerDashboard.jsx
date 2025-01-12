@@ -11,11 +11,10 @@ function BuyerDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [jobStatus, setJobStatus] = useState(null);
+  const [fundStatus, setFundStatus] = useState(null);
   const [price, setPrice] = useState('');
-  const [completionStatus, setCompletionStatus] = useState(null); // Completion status
 
   useEffect(() => {
-    // Fetch shops
     const fetchShops = async () => {
       try {
         const response = await fetch('http://localhost:8000/api/shops');
@@ -33,7 +32,6 @@ function BuyerDashboard() {
   }, []);
 
   useEffect(() => {
-    // Fetch buyer orders
     const fetchOrders = async () => {
       try {
         const response = await fetch(`http://localhost:8000/api/buyer/${accountId}/orders`);
@@ -79,30 +77,67 @@ function BuyerDashboard() {
     }
   };
 
-  const completeOrder = async (orderId) => {
+  const fundJob = async (order_id) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/order/${orderId}/complete?buyer_address=${accountId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const response = await fetch(
+        `http://localhost:8000/api/fundjob/${order_id}?buyer_address=${accountId}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
 
       const data = await response.json();
 
       if (response.ok) {
-        setCompletionStatus({
-          message: `Order ${orderId} completed successfully!`,
+        setFundStatus({
+          message: data.message,
           transactionHash: data.transaction_hash,
         });
-        // Refresh orders to show the updated status
-        const updatedOrders = orders.map((order) =>
-          order.order_id === orderId ? { ...order, status: 'completed' } : order
+
+        // Update the order status locally
+        setOrders((prevOrders) =>
+          prevOrders.map((order) =>
+            order.order_id === order_id ? { ...order, status: 'funded' } : order
+          )
         );
-        setOrders(updatedOrders);
       } else {
-        setCompletionStatus({ message: `Error: ${data.detail}` });
+        setFundStatus({ message: `Error: ${data.detail}` });
       }
     } catch (error) {
-      setCompletionStatus({ message: `Error: ${error.message}` });
+      setFundStatus({ message: `Error: ${error.message}` });
+    }
+  };
+
+  const completeOrder = async (order_id) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/order/${order_id}/complete?buyer_address=${accountId}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Update the order status locally
+        setOrders((prevOrders) =>
+          prevOrders.map((order) =>
+            order.order_id === order_id ? { ...order, status: 'completed' } : order
+          )
+        );
+
+        setFundStatus({
+          message: data.message,
+          transactionHash: data.transaction_hash,
+        });
+      } else {
+        setFundStatus({ message: `Error: ${data.detail}` });
+      }
+    } catch (error) {
+      setFundStatus({ message: `Error: ${error.message}` });
     }
   };
 
@@ -113,7 +148,7 @@ function BuyerDashboard() {
     <div>
       <h1>Welcome, {username} (Buyer Dashboard)</h1>
       <p>MetaMask Account ID: {accountId}</p>
-      
+
       <h2>Shops</h2>
       <ul>
         {shops.map((shop) => (
@@ -151,8 +186,12 @@ function BuyerDashboard() {
               <p>Shop: {order.shop_name}</p>
               <p>Price: {order.price}</p>
               <p>Status: {order.status}</p>
-              {order.status !== 'completed' && (
+              {order.status === 'completed' ? (
+                <button disabled>Completed</button>
+              ) : order.status === 'funded' ? (
                 <button onClick={() => completeOrder(order.order_id)}>Complete</button>
+              ) : (
+                <button onClick={() => fundJob(order.order_id)}>Fund Job</button>
               )}
             </li>
           ))
@@ -161,10 +200,10 @@ function BuyerDashboard() {
         )}
       </ul>
 
-      {completionStatus && (
+      {fundStatus && (
         <div>
-          <p>{completionStatus.message}</p>
-          {completionStatus.transactionHash && <p>Transaction Hash: {completionStatus.transactionHash}</p>}
+          <p>{fundStatus.message}</p>
+          {fundStatus.transactionHash && <p>Transaction Hash: {fundStatus.transactionHash}</p>}
         </div>
       )}
     </div>
