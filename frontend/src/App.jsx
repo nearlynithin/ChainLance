@@ -4,7 +4,7 @@ import Login from './frontend/Login.jsx';
 import Signup from './frontend/Signup.jsx';
 import BuyerDashboard from './frontend/BuyerDashboard.jsx';
 import SellerDashboard from './frontend/SellerDashboard.jsx';
-
+import ChainlanceHero from './frontend/hero.jsx';
 function App() {
   const [user, setUser] = useState(null);
 
@@ -19,6 +19,7 @@ function App() {
   return (
     <Router>
       <Routes>
+      <Route path="/" element={< ChainlanceHero/>} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route

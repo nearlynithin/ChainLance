@@ -9,7 +9,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 function Header() {
     return (
         <>
-          <div className="absolute flex justify-between items-center bg-white bg-opacity-60 backdrop-blur-sm  drop-shadow-xl w-full p-4 top-0">
+          <div className="absolute  z-20 flex justify-between items-center bg-white bg-opacity-60 backdrop-blur-sm  drop-shadow-xl w-full p-4 top-0">
             {/* Logo and Title */}
             <div className="flex justify-start items-center">
               <l-trefoil
