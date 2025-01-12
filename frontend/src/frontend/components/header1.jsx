@@ -21,7 +21,7 @@ function Header() {
                 color="#b266f0"
               ></l-trefoil>
               <h1 className="text-purple-900 text-3xl ml-4 font-Cairo font-semibold">
-                ChainVance
+                ChainLance
               </h1>
             </div>
       

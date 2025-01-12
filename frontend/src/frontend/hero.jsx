@@ -128,7 +128,7 @@ const ChainlanceHero = () => {
             Chain<span className="text-purple-300">Lance</span>
           </motion.h1>
           <p className="mb-8 text-xl sm:text-2xl md:text-3xl">
-            Revolutionizing DeFi with Blockchain Technology
+            Revolutionizing Freelancing with Blockchain Technology
           </p>
         </motion.div>
         <motion.div
@@ -142,13 +142,20 @@ const ChainlanceHero = () => {
           <BlockchainFeature icon="🔗" title="Immutable" description="Tamper-proof records" />
           <BlockchainFeature icon="💼" title="Smart Contracts" description="Automated execution" />
         </motion.div>
-        <motion.button
-          whileHover={{ scale: 1.05, boxShadow: "0px 0px 15px rgb(167 139 250)" }}
-          whileTap={{ scale: 0.95 }}
-          className="rounded-full bg-purple-500 px-8 py-3 font-semibold text-white transition-colors hover:bg-purple-600"
-        >
-          Explore ChainLance
-        </motion.button>
+        <motion.a
+  href="https://github.com/nearlynithin/ChainLance" // Replace with your actual GitHub link
+  target="_blank"
+  rel="noopener noreferrer"
+>
+  <motion.button
+    whileHover={{ scale: 1.05, boxShadow: "0px 0px 15px rgb(167 139 250)" }}
+    whileTap={{ scale: 0.95 }}
+    className="rounded-full bg-purple-500 px-8 py-3 font-semibold text-white transition-colors hover:bg-purple-600"
+  >
+    Explore ChainLance
+  </motion.button>
+</motion.a>
+
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
