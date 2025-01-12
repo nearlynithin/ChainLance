@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import sqlite3
@@ -6,6 +6,9 @@ from datetime import datetime
 from brownie import network, Contract
 import json
 import uvicorn
+import ipfsApi  # Changed import
+from typing import List
+
 
 # Initialize FastAPI
 app = FastAPI()
@@ -74,6 +77,198 @@ def init_db():
 
 # Initialize database on startup
 init_db()
+
+#IPFS related endpoints
+# New IPFS-related endpoints
+@app.post("/api/order/{order_id}/deliver")
+async def deliver_files(
+    order_id: int,
+    seller_address: str = Form(...),
+    files: List[UploadFile] = File(...)
+):
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # Verify order exists and seller is authorized
+        cursor.execute("""
+            SELECT * FROM orders 
+            WHERE order_id = ? AND seller_id = ? AND status = 'funded'
+        """, (order_id, seller_address))
+        order = cursor.fetchone()
+        
+        if not order:
+            raise HTTPException(
+                status_code=404, 
+                detail="Order not found or unauthorized"
+            )
+        
+        # Upload files to IPFS and store hashes
+        ipfs_hashes = []
+        file_names = []
+        
+        for file in files:
+            content = await file.read()
+            # Changed IPFS upload to use ipfsapi
+            ipfs_result = ipfs_client.add_bytes(content)
+            ipfs_hash = ipfs_result  # ipfsapi returns hash directly as string
+            
+            cursor.execute("""
+                INSERT INTO delivery_files (order_id, ipfs_hash, file_name)
+                VALUES (?, ?, ?)
+            """, (order_id, ipfs_hash, file.filename))
+            
+            ipfs_hashes.append(ipfs_hash)
+            file_names.append(file.filename)
+        
+        # Update blockchain
+        tx = chainlance.deliverFiles(
+            order_id,
+            ipfs_hashes,
+            {"from": seller_address}
+        )
+        
+        # Update order status
+        cursor.execute(
+            "UPDATE orders SET status = 'delivered' WHERE order_id = ?", 
+            (order_id,)
+        )
+        
+        conn.commit()
+        conn.close()
+        
+        return JSONResponse(content={
+            "message": "Files delivered successfully",
+            "transaction_hash": tx.txid,
+            "ipfs_hashes": ipfs_hashes,
+            "file_names": file_names
+        })
+        
+    except Exception as e:
+        print(f"Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/order/{order_id}/accept")
+async def accept_delivery(order_id: int, buyer_address: str):
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # Verify order exists and buyer is authorized
+        cursor.execute("""
+            SELECT * FROM orders 
+            WHERE order_id = ? AND buyer_id = ? AND status = 'delivered'
+        """, (order_id, buyer_address))
+        order = cursor.fetchone()
+        
+        if not order:
+            raise HTTPException(
+                status_code=404, 
+                detail="Order not found or unauthorized"
+            )
+        
+        # Accept delivery on blockchain
+        tx = chainlance.acceptDelivery(
+            order_id,
+            {"from": buyer_address}
+        )
+        
+        # Update order status
+        cursor.execute(
+            "UPDATE orders SET status = 'accepted' WHERE order_id = ?", 
+            (order_id,)
+        )
+        
+        conn.commit()
+        conn.close()
+        
+        return JSONResponse(content={
+            "message": "Delivery accepted successfully",
+            "transaction_hash": tx.txid
+        })
+        
+    except Exception as e:
+        print(f"Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+@app.post("/api/order/{order_id}/reject")
+async def reject_delivery(
+    order_id: int, 
+    buyer_address: str, 
+    reason: str
+):
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # Verify order exists and buyer is authorized
+        cursor.execute("""
+            SELECT * FROM orders 
+            WHERE order_id = ? AND buyer_id = ? AND status = 'delivered'
+        """, (order_id, buyer_address))
+        order = cursor.fetchone()
+        
+        if not order:
+            raise HTTPException(
+                status_code=404, 
+                detail="Order not found or unauthorized"
+            )
+        
+        # Reject delivery on blockchain
+        tx = chainlance.rejectDelivery(
+            order_id,
+            reason,
+            {"from": buyer_address}
+        )
+        
+        # Update order status
+        cursor.execute(
+            "UPDATE orders SET status = 'rejected' WHERE order_id = ?", 
+            (order_id,)
+        )
+        
+        conn.commit()
+        conn.close()
+        
+        return JSONResponse(content={
+            "message": "Delivery rejected successfully",
+            "transaction_hash": tx.txid,
+            "reason": reason
+        })
+        
+    except Exception as e:
+        print(f"Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/order/{order_id}/files")
+async def get_order_files(order_id: int):
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # Get all files associated with the order
+        cursor.execute("""
+            SELECT file_id, ipfs_hash, file_name, uploaded_at 
+            FROM delivery_files 
+            WHERE order_id = ?
+            ORDER BY uploaded_at DESC
+        """, (order_id,))
+        
+        files = cursor.fetchall()
+        conn.close()
+        
+        return {
+            "order_id": order_id,
+            "files": [dict(file) for file in files]
+        }
+        
+    except Exception as e:
+        print(f"Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
 # Blockchain endpoints
 @app.post("/api/createjob")

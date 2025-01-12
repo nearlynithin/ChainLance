@@ -9,11 +9,12 @@ contract ChainLance {
         uint256 price;
         bool isFunded;
         bool isCompleted;
+        string[] deliveryFiles; // IPFS hashes for delivered files
+        bool filesAccepted; // Buyer's approval of delivered files
     }
 
     uint256 public jobCounter;
     mapping(uint256 => Job) public jobs;
-    // New mapping to track seller's jobs
     mapping(address => uint256[]) public sellerJobs;
 
     event JobCreated(
@@ -25,6 +26,13 @@ contract ChainLance {
     event JobFunded(uint256 jobId, uint256 price);
     event JobCompleted(uint256 jobId, address indexed seller);
     event JobCancelled(uint256 jobId, address indexed buyer);
+    event FilesDelivered(
+        uint256 jobId,
+        address indexed seller,
+        string[] fileHashes
+    );
+    event FilesAccepted(uint256 jobId, address indexed buyer);
+    event FilesRejected(uint256 jobId, address indexed buyer, string reason);
 
     modifier onlyBuyer(uint256 jobId) {
         require(
@@ -52,23 +60,21 @@ contract ChainLance {
         require(seller != address(0), "Invalid seller address");
 
         jobCounter++;
-
         jobs[jobCounter] = Job({
             id: jobCounter,
             buyer: msg.sender,
             seller: seller,
             price: price,
             isFunded: false,
-            isCompleted: false
+            isCompleted: false,
+            deliveryFiles: new string[](0),
+            filesAccepted: false
         });
 
-        // Add job to seller's job list
         sellerJobs[seller].push(jobCounter);
-
         emit JobCreated(jobCounter, msg.sender, seller, price);
     }
 
-    // New function to get all jobs for a seller
     function getSellerJobs(
         address seller
     ) external view returns (uint256[] memory) {
@@ -86,12 +92,53 @@ contract ChainLance {
         emit JobFunded(jobId, msg.value);
     }
 
+    function deliverFiles(
+        uint256 jobId,
+        string[] calldata fileHashes
+    ) external jobExists(jobId) onlySeller(jobId) {
+        Job storage job = jobs[jobId];
+        require(job.isFunded, "Job is not funded");
+        require(!job.isCompleted, "Job is already completed");
+        require(fileHashes.length > 0, "Must provide at least one file hash");
+
+        job.deliveryFiles = fileHashes;
+        emit FilesDelivered(jobId, msg.sender, fileHashes);
+    }
+
+    function acceptDelivery(
+        uint256 jobId
+    ) external jobExists(jobId) onlyBuyer(jobId) {
+        Job storage job = jobs[jobId];
+        require(job.isFunded, "Job is not funded");
+        require(!job.isCompleted, "Job is already completed");
+        require(job.deliveryFiles.length > 0, "No files have been delivered");
+        require(!job.filesAccepted, "Files already accepted");
+
+        job.filesAccepted = true;
+        emit FilesAccepted(jobId, msg.sender);
+    }
+
+    function rejectDelivery(
+        uint256 jobId,
+        string calldata reason
+    ) external jobExists(jobId) onlyBuyer(jobId) {
+        Job storage job = jobs[jobId];
+        require(job.isFunded, "Job is not funded");
+        require(!job.isCompleted, "Job is already completed");
+        require(job.deliveryFiles.length > 0, "No files have been delivered");
+        require(!job.filesAccepted, "Files already accepted");
+
+        delete job.deliveryFiles;
+        emit FilesRejected(jobId, msg.sender, reason);
+    }
+
     function completeJob(
         uint256 jobId
     ) external jobExists(jobId) onlyBuyer(jobId) {
         Job storage job = jobs[jobId];
         require(job.isFunded, "Job is not funded");
         require(!job.isCompleted, "Job is already completed");
+        require(job.filesAccepted, "Files must be accepted before completion");
 
         job.isCompleted = true;
         job.seller.transfer(job.price);
@@ -103,12 +150,18 @@ contract ChainLance {
     ) external jobExists(jobId) onlyBuyer(jobId) {
         Job storage job = jobs[jobId];
         require(!job.isCompleted, "Cannot cancel a completed job");
+        require(!job.filesAccepted, "Cannot cancel after accepting files");
 
         if (job.isFunded) {
             payable(job.buyer).transfer(job.price);
         }
-
         delete jobs[jobId];
         emit JobCancelled(jobId, msg.sender);
+    }
+
+    function getJobDeliveryFiles(
+        uint256 jobId
+    ) external view jobExists(jobId) returns (string[] memory) {
+        return jobs[jobId].deliveryFiles;
     }
 }
